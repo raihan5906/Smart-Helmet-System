@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Helmet Monitor</title>
+    <title>Smart Helmet Monitor </title>
+    
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/x-icon" href="/logo.png" />
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -32,6 +36,19 @@
             background: #121822; padding: 15px 25px;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid var(--border-color);
+        }
+
+        /* FLEXBOX TITLE BLOCK WITH LOGO REFERENCE */
+        .title-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            height: 32px;
+            width: auto;
+            object-fit: contain;
         }
 
         .dash-title {
@@ -102,7 +119,10 @@
 
     <div class="dashboard-container">
         <header class="dash-header">
-            <div class="dash-title">SMART HELMET MONITOR</div>
+            <div class="title-block">
+                <img src="/logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none';">
+                <div class="dash-title">SMART HELMET MONITOR</div>
+            </div>
             <div id="txt-coords" style="font-family: 'Orbitron', sans-serif; color: var(--text-muted);">GPS: SEARCHING COORDINATES...</div>
         </header>
 
@@ -131,6 +151,22 @@
                         <span id="stat-tilt" class="metric-val text-green">VERTICAL (<span id="txt-angle">0</span>°)</span>
                     </div>
                 </div>
+
+                <button id="btn-simulate-test" style="
+                    margin-top: auto;
+                    background: #25141a;
+                    border: 1px solid var(--neon-red);
+                    color: var(--neon-red);
+                    padding: 12px;
+                    border-radius: 6px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-size: 11px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    letter-spacing: 1px;
+                    transition: all 0.2s;">
+                    🧪 SIMULATE CRASH TEST
+                </button>
             </section>
 
             <section class="main-display">
@@ -159,8 +195,11 @@
 
         let bikeMarker = L.marker([12.9716, 77.5946]).addTo(map);
         let currentLat = 0; let currentLng = 0;
+        let isTestingCrash = false;
 
         socket.on('telemetryUpdate', (data) => {
+            if (isTestingCrash) return;
+
             const { topic, payload } = data;
 
             if (topic === 'smarthelmet/alcoholValue') {
@@ -183,9 +222,13 @@
                 const modal = document.getElementById('accident-modal');
                 const tiltEl = document.getElementById('stat-tilt');
                 if (payload === "CRASH") {
-                    modal.style.display = 'flex'; tiltEl.innerText = "CRASH DETECTED"; tiltEl.className = "metric-val text-red";
+                    modal.style.display = 'flex'; 
+                    tiltEl.innerHTML = `CRASH DETECTED (<span id="txt-angle">90</span>°)`; 
+                    tiltEl.className = "metric-val text-red";
                 } else {
-                    modal.style.display = 'none'; tiltEl.innerText = "VERTICAL (OK)"; tiltEl.className = "metric-val text-green";
+                    modal.style.display = 'none'; 
+                    tiltEl.innerHTML = `VERTICAL (<span id="txt-angle">0</span>°)`; 
+                    tiltEl.className = "metric-val text-green";
                 }
             }
             if (topic === 'smarthelmet/state' && payload === "FAULT_DISCONNECT") {
@@ -202,10 +245,51 @@
                 bikeMarker.setLatLng(updatedPos); map.panTo(updatedPos);
                 document.getElementById('txt-coords').innerText = `GPS LOCK: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
                 
-                // Dynamically build the exact Google Maps navigation URL query path strings
-                document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+                // FIXED THE PATH STRING CONCATENATION EXTRACTION TYPO HERE
+                document.getElementById('gmaps-link').href = `https://www.google.com/maps?q=${currentLat},${currentLng}`;
             }
         }
+
+        document.getElementById('btn-simulate-test').addEventListener('click', () => {
+            const modal = document.getElementById('accident-modal');
+            const helmetEl = document.getElementById('stat-helmet');
+            const tiltEl = document.getElementById('stat-tilt');
+            const engineEl = document.getElementById('stat-engine');
+            const relayEl = document.getElementById('stat-relay');
+            const alcoholEl = document.getElementById('lbl-alcohol');
+            const btn = document.getElementById('btn-simulate-test');
+
+            isTestingCrash = !isTestingCrash;
+
+            if (isTestingCrash) {
+                modal.style.display = 'flex';
+                
+                helmetEl.innerText = "NOT WORN";
+                helmetEl.className = "metric-val text-red";
+
+                tiltEl.innerHTML = `CRASH DETECTED (<span id="txt-angle">90</span>°)`;
+                tiltEl.className = "metric-val text-red";
+                
+                engineEl.innerText = "CRASH HALT";
+                engineEl.className = "metric-val text-red";
+                
+                relayEl.innerText = "OPEN (OFF)";
+                relayEl.className = "metric-val text-gray";
+                
+                alcoholEl.innerHTML = `2450 <span style="font-size:14px; color:var(--text-muted)">ADC</span>`;
+                
+                currentLat = 12.9716;
+                currentLng = 77.5946;
+                syncLocation();
+
+                btn.innerText = "🔄 RESET DASHBOARD";
+                btn.style.background = "#ff3333";
+                btn.style.color = "#fff";
+                btn.style.borderColor = "#ff3333";
+            } else {
+                window.location.reload();
+            }
+        });
     </script>
 </body>
 </html>
