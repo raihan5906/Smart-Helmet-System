@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Helmet Monitor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f1319;
+            --panel-bg: #151b26;
+            --border-color: #232d3f;
+            --neon-blue: #00d2ff;
+            --neon-green: #00ff66;
+            --neon-red: #ff3333;
+            --text-muted: #8a99ad;
+        }
+
+        body {
+            background-color: #0a0d12; margin: 0; padding: 20px;
+            height: 100vh; box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif; color: #ffffff; overflow: hidden;
+        }
+
+        .dashboard-container {
+            background: var(--bg-dark); border: 2px solid var(--border-color);
+            border-radius: 8px; height: calc(100vh - 40px); display: flex; flex-direction: column;
+        }
+
+        .dash-header {
+            background: #121822; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .dash-title {
+            font-family: 'Orbitron', sans-serif; font-size: 20px;
+            font-weight: 700; letter-spacing: 1px; color: var(--neon-blue);
+        }
+
+        .dash-grid { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+
+        .side-panel {
+            background: var(--panel-bg); border-right: 2px solid var(--border-color);
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .card-box {
+            background: #1b2230; border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 15px; text-align: center;
+        }
+
+        .card-lbl { font-size: 12px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
+        .card-val { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 700; color: #fff; }
+
+        .metric-list { display: flex; flex-direction: column; gap: 12px; }
+        .metric-row {
+            background: #1b2230; padding: 14px 20px; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);
+        }
+        .metric-lbl { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        .metric-val { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; }
+
+        .main-display { position: relative; height: 100%; width: 100%; }
+        #map-viewport { height: 100%; width: 100%; }
+
+        /* Leaflet Dark Aesthetic Filters */
+        .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-container {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        /* OVERLAY CRASH BANNER SELECTION */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 13, 18, 0.92); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: #25141a; border: 2px solid var(--neon-red);
+            border-radius: 8px; padding: 35px; text-align: center; width: 450px;
+            box-shadow: 0 0 30px rgba(255, 51, 51, 0.3);
+        }
+        .modal-box h2 { font-family: 'Orbitron', sans-serif; color: var(--neon-red); margin: 0 0 10px 0; }
+        .modal-box p { color: #fff; font-size: 16px; margin-bottom: 25px; }
+
+        .gmaps-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #c5221f; color: white; text-decoration: none;
+            padding: 12px 24px; border-radius: 4px; font-family: 'Orbitron', sans-serif;
+            font-weight: bold; transition: background 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .gmaps-btn:hover { background: #ea4335; }
+
+        .text-green { color: var(--neon-green); }
+        .text-red { color: var(--neon-red); }
+        .text-blue { color: var(--neon-blue); }
+        .text-gray { color: #5f6c7d; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <header class="dash-header">
+            <div class="dash-title">SMART HELMET MONITOR</div>
+            <div id="txt-coords" style="font-family: 'Orbitron', sans-serif; color: var(--text-muted);">GPS: SEARCHING COORDINATES...</div>
+        </header>
+
+        <main class="dash-grid">
+            <section class="side-panel">
+                <div class="card-box">
+                    <div class="card-lbl">Alcohol Density</div>
+                    <div class="card-val" id="lbl-alcohol" style="color: var(--neon-blue);">0000 <span style="font-size:14px; color:var(--text-muted)">ADC</span></div>
+                </div>
+
+                <div class="metric-list">
+                    <div class="metric-row">
+                        <span class="metric-lbl">HELMET STATUS</span>
+                        <span id="stat-helmet" class="metric-val text-red">DISCONNECTED</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">IGNITION STATE</span>
+                        <span id="stat-engine" class="metric-val text-gray">LOCKED</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">RELAY DRIVE</span>
+                        <span id="stat-relay" class="metric-val text-gray">OPEN</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">TILT LOG</span>
+                        <span id="stat-tilt" class="metric-val text-green">VERTICAL (<span id="txt-angle">0</span>°)</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="main-display">
+                <div id="map-viewport"></div>
+
+                <div id="accident-modal" class="modal-overlay">
+                    <div class="modal-box">
+                        <h2>⚠️ ACCIDENT DETECTED</h2>
+                        <p>System logging coordinates & sending automated emergency SMS alerts.</p>
+                        <a id="gmaps-link" href="#" target="_blank" class="gmaps-btn">
+                            📍 OPEN IN GOOGLE MAPS
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const socket = io();
+
+        let map = L.map('map-viewport', { zoomControl: false }).setView([12.9716, 77.5946], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let bikeMarker = L.marker([12.9716, 77.5946]).addTo(map);
+        let currentLat = 0; let currentLng = 0;
+
+        socket.on('telemetryUpdate', (data) => {
+            const { topic, payload } = data;
+
+            if (topic === 'smarthelmet/alcoholValue') {
+                document.getElementById('lbl-alcohol').innerHTML = `${payload.padStart(4, '0')} <span style="font-size:14px; color:var(--text-muted)">ADC</span>`;
+            }
+            if (topic === 'smarthelmet/helmet') {
+                const el = document.getElementById('stat-helmet'); el.innerText = payload;
+                el.className = (payload === "WORN") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/engine') {
+                const el = document.getElementById('stat-engine'); el.innerText = payload;
+                el.className = (payload === "RUNNING") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/relay') {
+                const el = document.getElementById('stat-relay');
+                el.innerText = (payload === "1") ? "CLOSED (ON)" : "OPEN (OFF)";
+                el.className = (payload === "1") ? "metric-val text-green" : "metric-val text-gray";
+            }
+            if (topic === 'smarthelmet/accident') {
+                const modal = document.getElementById('accident-modal');
+                const tiltEl = document.getElementById('stat-tilt');
+                if (payload === "CRASH") {
+                    modal.style.display = 'flex'; tiltEl.innerText = "CRASH DETECTED"; tiltEl.className = "metric-val text-red";
+                } else {
+                    modal.style.display = 'none'; tiltEl.innerText = "VERTICAL (OK)"; tiltEl.className = "metric-val text-green";
+                }
+            }
+            if (topic === 'smarthelmet/state' && payload === "FAULT_DISCONNECT") {
+                document.getElementById('stat-engine').innerText = "FAULT HALT";
+                document.getElementById('stat-engine').className = "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/gps/latitude')  { currentLat = parseFloat(payload); syncLocation(); }
+            if (topic === 'smarthelmet/gps/longitude') { currentLng = parseFloat(payload); syncLocation(); }
+        });
+
+        function syncLocation() {
+            if (currentLat !== 0 && currentLng !== 0) {
+                const updatedPos = [currentLat, currentLng];
+                bikeMarker.setLatLng(updatedPos); map.panTo(updatedPos);
+                document.getElementById('txt-coords').innerText = `GPS LOCK: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+                
+                // Dynamically build the exact Google Maps navigation URL query path strings
+                document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
+            }
+        }
+    </script>
+</body>
+</html>
