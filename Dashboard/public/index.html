@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Helmet Monitor </title>
+    <title>Smart Helmet Monitor</title>
     
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="icon" type="image/x-icon" href="/logo.png" />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-dark: #0f1319;
@@ -38,29 +39,19 @@
             border-bottom: 2px solid var(--border-color);
         }
 
-        /* FLEXBOX TITLE BLOCK WITH LOGO REFERENCE */
-        .title-block {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-logo {
-            height: 32px;
-            width: auto;
-            object-fit: contain;
-        }
+        .title-block { display: flex; align-items: center; gap: 12px; }
+        .header-logo { height: 32px; width: auto; object-fit: contain; }
 
         .dash-title {
             font-family: 'Orbitron', sans-serif; font-size: 20px;
             font-weight: 700; letter-spacing: 1px; color: var(--neon-blue);
         }
 
-        .dash-grid { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+        .dash-grid { display: grid; grid-template-columns: 360px 1fr; flex-grow: 1; overflow: hidden; }
 
         .side-panel {
             background: var(--panel-bg); border-right: 2px solid var(--border-color);
-            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+            padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
         }
 
         .card-box {
@@ -68,44 +59,44 @@
             border-radius: 6px; padding: 15px; text-align: center;
         }
 
-        .card-lbl { font-size: 12px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
-        .card-val { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 700; color: #fff; }
+        .card-lbl { font-size: 11px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .card-val { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
 
-        .metric-list { display: flex; flex-direction: column; gap: 12px; }
+        .metric-list { display: flex; flex-direction: column; gap: 10px; }
         .metric-row {
-            background: #1b2230; padding: 14px 20px; border-radius: 6px;
+            background: #1b2230; padding: 12px 16px; border-radius: 6px;
             display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);
         }
-        .metric-lbl { font-size: 13px; color: var(--text-muted); font-weight: bold; }
-        .metric-val { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; }
+        .metric-lbl { font-size: 12px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
+        .metric-val { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; }
 
         .main-display { position: relative; height: 100%; width: 100%; }
         #map-viewport { height: 100%; width: 100%; }
 
-        /* Leaflet Dark Aesthetic Filters */
+        /* Leaflet Dark Aesthetic Filters Map Layers */
         .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-container {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
 
-        /* OVERLAY CRASH BANNER SELECTION */
+        /* OVERLAY EMERGENCY ALARM CRASH BANNER */
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 13, 18, 0.92); z-index: 9999;
+            background: rgba(10, 13, 18, 0.94); z-index: 9999;
             display: none; align-items: center; justify-content: center;
         }
         .modal-box {
             background: #25141a; border: 2px solid var(--neon-red);
-            border-radius: 8px; padding: 35px; text-align: center; width: 450px;
-            box-shadow: 0 0 30px rgba(255, 51, 51, 0.3);
+            border-radius: 8px; padding: 35px; text-align: center; width: 440px;
+            box-shadow: 0 0 40px rgba(255, 51, 51, 0.35);
         }
-        .modal-box h2 { font-family: 'Orbitron', sans-serif; color: var(--neon-red); margin: 0 0 10px 0; }
-        .modal-box p { color: #fff; font-size: 16px; margin-bottom: 25px; }
+        .modal-box h2 { font-family: 'Orbitron', sans-serif; color: var(--neon-red); margin: 0 0 10px 0; letter-spacing: 1px; }
+        .modal-box p { color: #fff; font-size: 15px; margin-bottom: 25px; font-family: 'Rajdhani', sans-serif; }
 
         .gmaps-btn {
-            display: inline-flex; align-items: center; gap: 10px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
             background: #c5221f; color: white; text-decoration: none;
-            padding: 12px 24px; border-radius: 4px; font-family: 'Orbitron', sans-serif;
-            font-weight: bold; transition: background 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 14px 28px; border-radius: 4px; font-family: 'Orbitron', sans-serif;
+            font-size: 13px; font-weight: bold; transition: background 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         .gmaps-btn:hover { background: #ea4335; }
 
@@ -123,7 +114,7 @@
                 <img src="/logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none';">
                 <div class="dash-title">SMART HELMET MONITOR</div>
             </div>
-            <div id="txt-coords" style="font-family: 'Orbitron', sans-serif; color: var(--text-muted);">GPS: SEARCHING COORDINATES...</div>
+            <div id="txt-coords" style="font-family: 'Orbitron', sans-serif; color: var(--text-muted); font-size: 14px;">GPS: SEARCHING COORDINATES...</div>
         </header>
 
         <main class="dash-grid">
@@ -135,36 +126,48 @@
 
                 <div class="metric-list">
                     <div class="metric-row">
-                        <span class="metric-lbl">HELMET STATUS</span>
-                        <span id="stat-helmet" class="metric-val text-red">DISCONNECTED</span>
+                        <span class="metric-lbl">Helmet Status</span>
+                        <span id="stat-helmet" class="metric-val text-gray">WAITING</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-lbl">IGNITION STATE</span>
+                        <span class="metric-lbl">Alcohol Status</span>
+                        <span id="stat-alcohol" class="metric-val text-gray">UNKNOWN</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">Ignition State</span>
                         <span id="stat-engine" class="metric-val text-gray">LOCKED</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-lbl">RELAY DRIVE</span>
+                        <span class="metric-lbl">Relay Drive</span>
                         <span id="stat-relay" class="metric-val text-gray">OPEN</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-lbl">TILT LOG</span>
-                        <span id="stat-tilt" class="metric-val text-green">VERTICAL (<span id="txt-angle">0</span>°)</span>
+                        <span class="metric-lbl">Buzzer Alert</span>
+                        <span id="stat-buzzer" class="metric-val text-gray">OFF</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">Tilt Log</span>
+                        <span id="stat-tilt" class="metric-val text-green">VERTICAL (0°)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">ESP-NOW Link</span>
+                        <span id="stat-espnow" class="metric-val text-gray">WAITING</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">GPS Parser</span>
+                        <span id="stat-gps" class="metric-val text-gray">NO FIX</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-lbl">GSM Module</span>
+                        <span id="stat-gsm" class="metric-val text-gray">CHECKING</span>
                     </div>
                 </div>
 
                 <button id="btn-simulate-test" style="
-                    margin-top: auto;
-                    background: #25141a;
-                    border: 1px solid var(--neon-red);
-                    color: var(--neon-red);
-                    padding: 12px;
-                    border-radius: 6px;
-                    font-family: 'Orbitron', sans-serif;
-                    font-size: 11px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    letter-spacing: 1px;
-                    transition: all 0.2s;">
+                    margin-top: auto; background: #25141a; border: 1px solid var(--neon-red);
+                    color: var(--neon-red); padding: 12px; border-radius: 6px;
+                    font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold;
+                    cursor: pointer; letter-spacing: 1px; transition: all 0.2s;">
                     🧪 SIMULATE CRASH TEST
                 </button>
             </section>
@@ -175,7 +178,7 @@
                 <div id="accident-modal" class="modal-overlay">
                     <div class="modal-box">
                         <h2>⚠️ ACCIDENT DETECTED</h2>
-                        <p>System logging coordinates & sending automated emergency SMS alerts.</p>
+                        <p>Critical threshold matched. System logging coordinates & routing automated emergency notifications.</p>
                         <a id="gmaps-link" href="#" target="_blank" class="gmaps-btn">
                             📍 OPEN IN GOOGLE MAPS
                         </a>
@@ -190,6 +193,7 @@
     <script>
         const socket = io();
 
+        // Initialize spatial map targeting Bengaluru central verification matrix coordinates
         let map = L.map('map-viewport', { zoomControl: false }).setView([12.9716, 77.5946], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -198,65 +202,88 @@
         let isTestingCrash = false;
 
         socket.on('telemetryUpdate', (data) => {
-            if (isTestingCrash) return;
+            if (isTestingCrash) return; // Freeze dynamic loops if simulation mode overrides
 
             const { topic, payload } = data;
 
-            if (topic === 'smarthelmet/alcoholValue') {
+            if (topic === 'smarthelmet/alcohol_value') {
                 document.getElementById('lbl-alcohol').innerHTML = `${payload.padStart(4, '0')} <span style="font-size:14px; color:var(--text-muted)">ADC</span>`;
             }
-            if (topic === 'smarthelmet/helmet') {
+            if (topic === 'smarthelmet/alcohol_status') {
+                const el = document.getElementById('stat-alcohol'); el.innerText = payload;
+                el.className = (payload === "SAFE") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/helmet_status') {
                 const el = document.getElementById('stat-helmet'); el.innerText = payload;
                 el.className = (payload === "WORN") ? "metric-val text-green" : "metric-val text-red";
             }
-            if (topic === 'smarthelmet/engine') {
+            if (topic === 'smarthelmet/engine_status') {
                 const el = document.getElementById('stat-engine'); el.innerText = payload;
-                el.className = (payload === "RUNNING") ? "metric-val text-green" : "metric-val text-red";
+                el.className = (payload === "ON") ? "metric-val text-green" : "metric-val text-red";
             }
-            if (topic === 'smarthelmet/relay') {
+            if (topic === 'smarthelmet/relay_status') {
                 const el = document.getElementById('stat-relay');
                 el.innerText = (payload === "1") ? "CLOSED (ON)" : "OPEN (OFF)";
                 el.className = (payload === "1") ? "metric-val text-green" : "metric-val text-gray";
             }
-            if (topic === 'smarthelmet/accident') {
+            if (topic === 'smarthelmet/buzzer_status') {
+                const el = document.getElementById('stat-buzzer');
+                el.innerText = (payload === "1") ? "ACTIVE" : "OFF";
+                el.className = (payload === "1") ? "metric-val text-red" : "metric-val text-gray";
+            }
+            if (topic === 'smarthelmet/gps_status') {
+                const el = document.getElementById('stat-gps'); el.innerText = payload;
+                el.className = (payload === "Fixed") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/gsm_status') {
+                const el = document.getElementById('stat-gsm'); el.innerText = payload;
+                el.className = (payload === "Ready") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/espnow_status') {
+                const el = document.getElementById('stat-espnow'); el.innerText = payload;
+                el.className = (payload === "Connected") ? "metric-val text-green" : "metric-val text-red";
+            }
+            if (topic === 'smarthelmet/tilt_angle') {
+                const el = document.getElementById('stat-tilt');
+                const val = parseFloat(payload);
+                el.innerHTML = (val > 0) ? `TILTED (${val}°)` : `VERTICAL (0°)`;
+                el.className = (val > 0) ? "metric-val text-red" : "metric-val text-green";
+            }
+            if (topic === 'smarthelmet/accident_status') {
                 const modal = document.getElementById('accident-modal');
-                const tiltEl = document.getElementById('stat-tilt');
-                if (payload === "CRASH") {
-                    modal.style.display = 'flex'; 
-                    tiltEl.innerHTML = `CRASH DETECTED (<span id="txt-angle">90</span>°)`; 
-                    tiltEl.className = "metric-val text-red";
+                if (payload === "ACCIDENT") {
+                    modal.style.display = 'flex';
                 } else {
-                    modal.style.display = 'none'; 
-                    tiltEl.innerHTML = `VERTICAL (<span id="txt-angle">0</span>°)`; 
-                    tiltEl.className = "metric-val text-green";
+                    modal.style.display = 'none';
                 }
             }
-            if (topic === 'smarthelmet/state' && payload === "FAULT_DISCONNECT") {
-                document.getElementById('stat-engine').innerText = "FAULT HALT";
-                document.getElementById('stat-engine').className = "metric-val text-red";
-            }
-            if (topic === 'smarthelmet/gps/latitude')  { currentLat = parseFloat(payload); syncLocation(); }
-            if (topic === 'smarthelmet/gps/longitude') { currentLng = parseFloat(payload); syncLocation(); }
+            if (topic === 'smarthelmet/latitude')  { currentLat = parseFloat(payload); syncLocation(); }
+            if (topic === 'smarthelmet/longitude') { currentLng = parseFloat(payload); syncLocation(); }
         });
 
         function syncLocation() {
             if (currentLat !== 0 && currentLng !== 0) {
                 const updatedPos = [currentLat, currentLng];
-                bikeMarker.setLatLng(updatedPos); map.panTo(updatedPos);
-                document.getElementById('txt-coords').innerText = `GPS LOCK: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+                bikeMarker.setLatLng(updatedPos); 
+                map.panTo(updatedPos);
                 
-                // FIXED THE PATH STRING CONCATENATION EXTRACTION TYPO HERE
-                document.getElementById('gmaps-link').href = `https://www.google.com/maps?q=${currentLat},${currentLng}`;
+                document.getElementById('txt-coords').innerText = `GPS LOCK: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+                
+                // CORRECTION: Ensure this line uses backticks (``) for dynamic variable injection
+                document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
             }
         }
 
+        // Project Presentation Simulation Handler Hook
         document.getElementById('btn-simulate-test').addEventListener('click', () => {
             const modal = document.getElementById('accident-modal');
             const helmetEl = document.getElementById('stat-helmet');
             const tiltEl = document.getElementById('stat-tilt');
             const engineEl = document.getElementById('stat-engine');
             const relayEl = document.getElementById('stat-relay');
+            const buzzerEl = document.getElementById('stat-buzzer');
             const alcoholEl = document.getElementById('lbl-alcohol');
+            const alcStsEl = document.getElementById('stat-alcohol');
             const btn = document.getElementById('btn-simulate-test');
 
             isTestingCrash = !isTestingCrash;
@@ -264,28 +291,19 @@
             if (isTestingCrash) {
                 modal.style.display = 'flex';
                 
-                helmetEl.innerText = "NOT WORN";
-                helmetEl.className = "metric-val text-red";
-
-                tiltEl.innerHTML = `CRASH DETECTED (<span id="txt-angle">90</span>°)`;
-                tiltEl.className = "metric-val text-red";
-                
-                engineEl.innerText = "CRASH HALT";
-                engineEl.className = "metric-val text-red";
-                
-                relayEl.innerText = "OPEN (OFF)";
-                relayEl.className = "metric-val text-gray";
-                
+                helmetEl.innerText = "NOT WORN"; helmetEl.className = "metric-val text-red";
+                tiltEl.innerHTML = `CRASH DETECTED (90°)`; tiltEl.className = "metric-val text-red";
+                engineEl.innerText = "OFF"; engineEl.className = "metric-val text-red";
+                relayEl.innerText = "OPEN (OFF)"; relayEl.className = "metric-val text-gray";
+                buzzerEl.innerText = "ACTIVE"; buzzerEl.className = "metric-val text-red";
+                alcStsEl.innerText = "HIGH"; alcStsEl.className = "metric-val text-red";
                 alcoholEl.innerHTML = `2450 <span style="font-size:14px; color:var(--text-muted)">ADC</span>`;
                 
-                currentLat = 12.9716;
-                currentLng = 77.5946;
+                currentLat = 12.9716; currentLng = 77.5946;
                 syncLocation();
 
                 btn.innerText = "🔄 RESET DASHBOARD";
-                btn.style.background = "#ff3333";
-                btn.style.color = "#fff";
-                btn.style.borderColor = "#ff3333";
+                btn.style.background = "#ff3333"; btn.style.color = "#fff"; btn.style.borderColor = "#ff3333";
             } else {
                 window.location.reload();
             }

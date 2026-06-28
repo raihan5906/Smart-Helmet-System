@@ -1,32 +1,74 @@
 const express = require('express');
 const http = require('http');
-const mqtt = require('mqtt');
 const socketIo = require('socket.io');
+const mqtt = require('mqtt');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-app.use(express.static('public'));
+const PORT = 3000;
 
-// Connect to your local or target cloud MQTT Broker infrastructure instance 
-const mqttClient = mqtt.connect('mqtt://localhost:1883'); 
+// Serve public visualization assets
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ── CONNECT TO YOUR FIRMWARE'S PUBLIC HIVEMQ BROKER ──
+const MQTT_BROKER = 'mqtt://broker.hivemq.com:1883';
+const mqttClient = mqtt.connect(MQTT_BROKER);
+
+// Array containing the exact topics matching your Bike Unit firmware definitions
+const topics = [
+    "smarthelmet/alcohol_value",
+    "smarthelmet/alcohol_status",
+    "smarthelmet/helmet_status",
+    "smarthelmet/tilt_angle",
+    "smarthelmet/helmet_led",
+    "smarthelmet/latitude",
+    "smarthelmet/longitude",
+    "smarthelmet/gps_status",
+    "smarthelmet/engine_status",
+    "smarthelmet/gsm_status",
+    "smarthelmet/relay_status",
+    "smarthelmet/buzzer_status",
+    "smarthelmet/emergency_msg",
+    "smarthelmet/accident_status",
+    "smarthelmet/espnow_status"
+];
 
 mqttClient.on('connect', () => {
-    console.log('Connected to target MQTT Broker Channel successfully.');
-    mqttClient.subscribe('smarthelmet/#', (err) => {
-        if (!err) console.log('Subscribed to all structured telemetry feeds.');
+    console.log('✔ Connected successfully to HiveMQ Broker.');
+    mqttClient.subscribe(topics, (err) => {
+        if (!err) {
+            console.log('📡 Subscribed cleanly to all system telemetry loops.');
+        } else {
+            console.error('❌ Topic subscription fault encountered:', err);
+        }
     });
 });
 
-// Pass topics through to Socket.IO clients instantly
+// Process downstream messages and pass them smoothly down the WebSocket pipe
 mqttClient.on('message', (topic, message) => {
-    io.emit('telemetryUpdate', { topic, payload: message.toString() });
+    const payloadStr = message.toString();
+    
+    // Broadcast immediately down to all active frontend UI browser tabs
+    io.emit('telemetryUpdate', {
+        topic: topic,
+        payload: payloadStr
+    });
 });
 
+// WebSocket orchestration mapping loop
 io.on('connection', (socket) => {
-    console.log('Web Dashboard visualization node synchronized.');
+    console.log(`🔌 Live connection established with Client Console ID: ${socket.id}`);
+    
+    socket.on('disconnect', () => {
+        console.log(`🔌 Client console connection severed for ID: ${socket.id}`);
+    });
 });
 
-const PORT = 3000;
-server.listen(PORT, () => console.log(`Industrial Server rendering active on port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`🚀 WEB CONSOLE RUNNING AT: http://localhost:${PORT}`);
+    console.log(`====================================================`);
+});

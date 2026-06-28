@@ -7,10 +7,12 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "mqtt": "^5.5.5",
-    "socket.io": "^4.7.5"
+    "express": "^4.22.2",
+    "mqtt": "^5.15.1",
+    "socket.io": "^4.8.3"
   },
   "author": "Mohammed Raihan Shariff & Team",
-  "license": "ISC"
+  "license": "ISC",
+  "keywords": [],
+  "type": "commonjs"
 }
